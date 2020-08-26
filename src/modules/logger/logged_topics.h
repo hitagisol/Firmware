@@ -36,6 +36,7 @@
 #include <stdint.h>
 
 #include <uORB/uORB.h>
+#include <uORB/topics/uORBTopics.hpp>
 
 namespace px4
 {
@@ -50,7 +51,9 @@ enum class SDLogProfileMask : int32_t {
 	HIGH_RATE =             1 << 4,
 	DEBUG_TOPICS =          1 << 5,
 	SENSOR_COMPARISON =     1 << 6,
-	VISION_AND_AVOIDANCE =  1 << 7
+	VISION_AND_AVOIDANCE =  1 << 7,
+	RAW_IMU_GYRO_FIFO =     1 << 8,
+	RAW_IMU_ACCEL_FIFO =    1 << 9
 };
 
 enum class MissionLogType : int32_t {
@@ -74,9 +77,9 @@ public:
 	static constexpr int 		MAX_TOPICS_NUM = 200; /**< Maximum number of logged topics */
 
 	struct RequestedSubscription {
-		const orb_metadata *topic;
 		uint16_t interval_ms;
 		uint8_t instance;
+		ORB_ID id{ORB_ID::INVALID};
 	};
 	struct RequestedSubscriptionArray {
 		RequestedSubscription sub[MAX_TOPICS_NUM];
@@ -138,6 +141,9 @@ private:
 	void add_debug_topics();
 	void add_sensor_comparison_topics();
 	void add_vision_and_avoidance_topics();
+	void add_raw_imu_gyro_fifo();
+	void add_raw_imu_accel_fifo();
+
 	/**
 	 * add a logged topic (called by add_topic() above).
 	 * @return true on success

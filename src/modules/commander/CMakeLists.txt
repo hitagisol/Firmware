@@ -41,18 +41,17 @@ px4_add_module(
 	SRCS
 		accelerometer_calibration.cpp
 		airspeed_calibration.cpp
-		baro_calibration.cpp
 		calibration_routines.cpp
 		Commander.cpp
 		commander_helper.cpp
 		esc_calibration.cpp
 		gyro_calibration.cpp
+		level_calibration.cpp
 		mag_calibration.cpp
 		rc_calibration.cpp
 		state_machine_helper.cpp
 	DEPENDS
 		circuit_breaker
-		df_driver_framework
 		failure_detector
 		git_ecl
 		ecl_geo
@@ -60,6 +59,7 @@ px4_add_module(
 		PreFlightCheck
 		ArmAuthorization
 		HealthFlags
+		sensor_calibration
 	)
 
 if(PX4_TESTING)

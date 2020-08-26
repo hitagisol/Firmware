@@ -268,7 +268,7 @@ PARAM_DEFINE_FLOAT(EKF2_GYR_NOISE, 1.5e-2f);
  * @group EKF2
  * @min 0.01
  * @max 1.0
- * @unit m/s/s
+ * @unit m/s^2
  * @decimal 2
  */
 PARAM_DEFINE_FLOAT(EKF2_ACC_NOISE, 3.5e-1f);
@@ -279,7 +279,7 @@ PARAM_DEFINE_FLOAT(EKF2_ACC_NOISE, 3.5e-1f);
  * @group EKF2
  * @min 0.0
  * @max 0.01
- * @unit rad/s**2
+ * @unit rad/s^2
  * @decimal 6
  */
 PARAM_DEFINE_FLOAT(EKF2_GYR_B_NOISE, 1.0e-3f);
@@ -290,7 +290,7 @@ PARAM_DEFINE_FLOAT(EKF2_GYR_B_NOISE, 1.0e-3f);
  * @group EKF2
  * @min 0.0
  * @max 0.01
- * @unit m/s**3
+ * @unit m/s^3
  * @decimal 6
  */
 PARAM_DEFINE_FLOAT(EKF2_ACC_B_NOISE, 3.0e-3f);
@@ -301,7 +301,7 @@ PARAM_DEFINE_FLOAT(EKF2_ACC_B_NOISE, 3.0e-3f);
  * @group EKF2
  * @min 0.0
  * @max 0.1
- * @unit Gauss/s
+ * @unit gauss/s
  * @decimal 6
  */
 PARAM_DEFINE_FLOAT(EKF2_MAG_B_NOISE, 1.0e-4f);
@@ -312,7 +312,7 @@ PARAM_DEFINE_FLOAT(EKF2_MAG_B_NOISE, 1.0e-4f);
  * @group EKF2
  * @min 0.0
  * @max 0.1
- * @unit Gauss/s
+ * @unit gauss/s
  * @decimal 6
  */
 PARAM_DEFINE_FLOAT(EKF2_MAG_E_NOISE, 1.0e-3f);
@@ -323,7 +323,7 @@ PARAM_DEFINE_FLOAT(EKF2_MAG_E_NOISE, 1.0e-3f);
  * @group EKF2
  * @min 0.0
  * @max 1.0
- * @unit m/s/s
+ * @unit m/s^2
  * @decimal 3
  */
 PARAM_DEFINE_FLOAT(EKF2_WIND_NOISE, 1.0e-1f);
@@ -337,7 +337,7 @@ PARAM_DEFINE_FLOAT(EKF2_WIND_NOISE, 1.0e-1f);
  * @unit m/s
  * @decimal 2
  */
-PARAM_DEFINE_FLOAT(EKF2_GPS_V_NOISE, 0.5f);
+PARAM_DEFINE_FLOAT(EKF2_GPS_V_NOISE, 0.3f);
 
 /**
  * Measurement noise for gps position.
@@ -370,7 +370,7 @@ PARAM_DEFINE_FLOAT(EKF2_NOAID_NOISE, 10.0f);
  * @unit m
  * @decimal 2
  */
-PARAM_DEFINE_FLOAT(EKF2_BARO_NOISE, 2.0f);
+PARAM_DEFINE_FLOAT(EKF2_BARO_NOISE, 3.5f);
 
 /**
  * Measurement noise for magnetic heading fusion.
@@ -389,7 +389,7 @@ PARAM_DEFINE_FLOAT(EKF2_HEAD_NOISE, 0.3f);
  * @group EKF2
  * @min 0.001
  * @max 1.0
- * @unit Gauss
+ * @unit gauss
  * @decimal 3
  */
 PARAM_DEFINE_FLOAT(EKF2_MAG_NOISE, 5.0e-2f);
@@ -490,7 +490,7 @@ PARAM_DEFINE_INT32(EKF2_DECL_TYPE, 7);
  * If set to '3-axis' 3-axis field fusion is used at all times.
  * If set to 'VTOL custom' the behaviour is the same as 'Automatic', but if fusing airspeed, magnetometer fusion is only allowed to modify the magnetic field states. This can be used by VTOL platforms with large magnetic field disturbances to prevent incorrect bias states being learned during forward flight operation which can adversely affect estimation accuracy after transition to hovering flight.
  * If set to 'MC custom' the behaviour is the same as 'Automatic, but if there are no earth frame position or velocity observations being used, the magnetometer will not be used. This enables vehicles to operate with no GPS in environments where the magnetic field cannot be used to provide a heading reference. Prior to flight, the yaw angle is assumed to be constant if movement tests controlled by the EKF2_MOVE_TEST parameter indicate that the vehicle is static. This allows the vehicle to be placed on the ground to learn the yaw gyro bias prior to flight.
- * If set to 'None' the magnetometer will not be used under any circumstance. Other sources of yaw may be used if selected via the EKF2_AID_MASK parameter.
+ * If set to 'None' the magnetometer will not be used under any circumstance. If no external source of yaw is available, it is possible to use post-takeoff horizontal movement combined with GPS velocity measurements to align the yaw angle with the timer required (depending on the amount of movement and GPS data quality). Other external sources of yaw may be used if selected via the EKF2_AID_MASK parameter.
  * @group EKF2
  * @value 0 Automatic
  * @value 1 Magnetic heading
@@ -509,7 +509,7 @@ PARAM_DEFINE_INT32(EKF2_MAG_TYPE, 0);
  * @group EKF2
  * @min 0.0
  * @max 5.0
- * @unit m/s**2
+ * @unit m/s^2
  * @decimal 2
  */
 PARAM_DEFINE_FLOAT(EKF2_MAG_ACCLIM, 0.5f);
@@ -547,7 +547,7 @@ PARAM_DEFINE_FLOAT(EKF2_BARO_GATE, 5.0f);
  * @group EKF2
  * @min 0.0
  * @max 10.0
- * @unit M
+ * @unit m
  * @decimal 1
  */
 PARAM_DEFINE_FLOAT(EKF2_GND_EFF_DZ, 0.0f);
@@ -560,7 +560,7 @@ PARAM_DEFINE_FLOAT(EKF2_GND_EFF_DZ, 0.0f);
  * @group EKF2
  * @min 0.0
  * @max 5.0
- * @unit M
+ * @unit m
  * @decimal 1
  */
 PARAM_DEFINE_FLOAT(EKF2_GND_MAX_HGT, 0.5f);
@@ -645,13 +645,28 @@ PARAM_DEFINE_INT32(EKF2_AID_MASK, 1);
 PARAM_DEFINE_INT32(EKF2_HGT_MODE, 0);
 
 /**
+ * Integer bitmask controlling fusion sources of the terrain estimator
+ *
+ * Set bits in the following positions to enable:
+ * 0 : Set to true to use range finder data if available
+ * 1 : Set to true to use optical flow data if available
+ *
+ * @group EKF2
+ * @min 0
+ * @max 3
+ * @bit 0 use range finder
+ * @bit 1 use optical flow
+ */
+PARAM_DEFINE_INT32(EKF2_TERR_MASK, 3);
+
+/**
  * Maximum lapsed time from last fusion of measurements that constrain velocity drift before the EKF will report the horizontal nav solution as invalid.
  *
  * @group EKF2
  * @group EKF2
  * @min 500000
  * @max 10000000
- * @unit uSec
+ * @unit us
  */
 PARAM_DEFINE_INT32(EKF2_NOAID_TOUT, 5000000);
 
@@ -712,7 +727,7 @@ PARAM_DEFINE_FLOAT(EKF2_MIN_RNG, 0.1f);
 PARAM_DEFINE_INT32(EKF2_EV_NOISE_MD, 0);
 
 /**
- * Measurement noise for vision position observations used when the vision system does not supply error estimates
+ * Measurement noise for vision position observations used to lower bound or replace the uncertainty included in the message
  *
  * @group EKF2
  * @min 0.01
@@ -722,7 +737,7 @@ PARAM_DEFINE_INT32(EKF2_EV_NOISE_MD, 0);
 PARAM_DEFINE_FLOAT(EKF2_EVP_NOISE, 0.1f);
 
 /**
- * Measurement noise for vision velocity observations used when the vision system does not supply error estimates
+ * Measurement noise for vision velocity observations used to lower bound or replace the uncertainty included in the message
  *
  * @group EKF2
  * @min 0.01
@@ -732,10 +747,10 @@ PARAM_DEFINE_FLOAT(EKF2_EVP_NOISE, 0.1f);
 PARAM_DEFINE_FLOAT(EKF2_EVV_NOISE, 0.1f);
 
 /**
- * Measurement noise for vision angle observations used when the vision system does not supply error estimates
+ * Measurement noise for vision angle observations used to lower bound or replace the uncertainty included in the message
  *
  * @group EKF2
- * @min 0.01
+ * @min 0.05
  * @unit rad
  * @decimal 2
  */
@@ -806,7 +821,20 @@ PARAM_DEFINE_FLOAT(EKF2_TERR_NOISE, 5.0f);
 PARAM_DEFINE_FLOAT(EKF2_TERR_GRAD, 0.5f);
 
 /**
- * X position of IMU in body frame
+ * Device id of IMU
+ *
+ * Set to 0 to use system selected (sensor_combined) IMU,
+ * otherwise set to the device id of the desired IMU (vehicle_imu).
+ *
+ * @group EKF2
+ * @value 0 System Primary
+ * @category Developer
+ *
+ */
+PARAM_DEFINE_INT32(EKF2_IMU_ID, 0);
+
+/**
+ * X position of IMU in body frame (forward axis with origin relative to vehicle centre of gravity)
  *
  * @group EKF2
  * @unit m
@@ -815,7 +843,7 @@ PARAM_DEFINE_FLOAT(EKF2_TERR_GRAD, 0.5f);
 PARAM_DEFINE_FLOAT(EKF2_IMU_POS_X, 0.0f);
 
 /**
- * Y position of IMU in body frame
+ * Y position of IMU in body frame (right axis with origin relative to vehicle centre of gravity)
  *
  * @group EKF2
  * @unit m
@@ -824,7 +852,7 @@ PARAM_DEFINE_FLOAT(EKF2_IMU_POS_X, 0.0f);
 PARAM_DEFINE_FLOAT(EKF2_IMU_POS_Y, 0.0f);
 
 /**
- * Z position of IMU in body frame
+ * Z position of IMU in body frame (down axis with origin relative to vehicle centre of gravity)
  *
  * @group EKF2
  * @unit m
@@ -833,7 +861,7 @@ PARAM_DEFINE_FLOAT(EKF2_IMU_POS_Y, 0.0f);
 PARAM_DEFINE_FLOAT(EKF2_IMU_POS_Z, 0.0f);
 
 /**
- * X position of GPS antenna in body frame
+ * X position of GPS antenna in body frame (forward axis with origin relative to vehicle centre of gravity)
  *
  * @group EKF2
  * @unit m
@@ -842,7 +870,7 @@ PARAM_DEFINE_FLOAT(EKF2_IMU_POS_Z, 0.0f);
 PARAM_DEFINE_FLOAT(EKF2_GPS_POS_X, 0.0f);
 
 /**
- * Y position of GPS antenna in body frame
+ * Y position of GPS antenna in body frame (right axis with origin relative to vehicle centre of gravity)
  *
  * @group EKF2
  * @unit m
@@ -851,7 +879,7 @@ PARAM_DEFINE_FLOAT(EKF2_GPS_POS_X, 0.0f);
 PARAM_DEFINE_FLOAT(EKF2_GPS_POS_Y, 0.0f);
 
 /**
- * Z position of GPS antenna in body frame
+ * Z position of GPS antenna in body frame (down axis with origin relative to vehicle centre of gravity)
  *
  * @group EKF2
  * @unit m
@@ -860,7 +888,7 @@ PARAM_DEFINE_FLOAT(EKF2_GPS_POS_Y, 0.0f);
 PARAM_DEFINE_FLOAT(EKF2_GPS_POS_Z, 0.0f);
 
 /**
- * X position of range finder origin in body frame
+ * X position of range finder origin in body frame (forward axis with origin relative to vehicle centre of gravity)
  *
  * @group EKF2
  * @unit m
@@ -869,7 +897,7 @@ PARAM_DEFINE_FLOAT(EKF2_GPS_POS_Z, 0.0f);
 PARAM_DEFINE_FLOAT(EKF2_RNG_POS_X, 0.0f);
 
 /**
- * Y position of range finder origin in body frame
+ * Y position of range finder origin in body frame (right axis with origin relative to vehicle centre of gravity)
  *
  * @group EKF2
  * @unit m
@@ -878,7 +906,7 @@ PARAM_DEFINE_FLOAT(EKF2_RNG_POS_X, 0.0f);
 PARAM_DEFINE_FLOAT(EKF2_RNG_POS_Y, 0.0f);
 
 /**
- * Z position of range finder origin in body frame
+ * Z position of range finder origin in body frame (down axis with origin relative to vehicle centre of gravity)
  *
  * @group EKF2
  * @unit m
@@ -887,7 +915,7 @@ PARAM_DEFINE_FLOAT(EKF2_RNG_POS_Y, 0.0f);
 PARAM_DEFINE_FLOAT(EKF2_RNG_POS_Z, 0.0f);
 
 /**
- * X position of optical flow focal point in body frame
+ * X position of optical flow focal point in body frame (forward axis with origin relative to vehicle centre of gravity)
  *
  * @group EKF2
  * @unit m
@@ -896,7 +924,7 @@ PARAM_DEFINE_FLOAT(EKF2_RNG_POS_Z, 0.0f);
 PARAM_DEFINE_FLOAT(EKF2_OF_POS_X, 0.0f);
 
 /**
- * Y position of optical flow focal point in body frame
+ * Y position of optical flow focal point in body frame (right axis with origin relative to vehicle centre of gravity)
  *
  * @group EKF2
  * @unit m
@@ -905,7 +933,7 @@ PARAM_DEFINE_FLOAT(EKF2_OF_POS_X, 0.0f);
 PARAM_DEFINE_FLOAT(EKF2_OF_POS_Y, 0.0f);
 
 /**
- * Z position of optical flow focal point in body frame
+ * Z position of optical flow focal point in body frame (down axis with origin relative to vehicle centre of gravity)
  *
  * @group EKF2
  * @unit m
@@ -914,7 +942,7 @@ PARAM_DEFINE_FLOAT(EKF2_OF_POS_Y, 0.0f);
 PARAM_DEFINE_FLOAT(EKF2_OF_POS_Z, 0.0f);
 
 /**
-* X position of VI sensor focal point in body frame
+* X position of VI sensor focal point in body frame (forward axis with origin relative to vehicle centre of gravity)
  *
  * @group EKF2
  * @unit m
@@ -923,7 +951,7 @@ PARAM_DEFINE_FLOAT(EKF2_OF_POS_Z, 0.0f);
 PARAM_DEFINE_FLOAT(EKF2_EV_POS_X, 0.0f);
 
 /**
- * Y position of VI sensor focal point in body frame
+ * Y position of VI sensor focal point in body frame (right axis with origin relative to vehicle centre of gravity)
  *
  * @group EKF2
  * @unit m
@@ -932,7 +960,7 @@ PARAM_DEFINE_FLOAT(EKF2_EV_POS_X, 0.0f);
 PARAM_DEFINE_FLOAT(EKF2_EV_POS_Y, 0.0f);
 
 /**
- * Z position of VI sensor focal point in body frame
+ * Z position of VI sensor focal point in body frame (down axis with origin relative to vehicle centre of gravity)
  *
  * @group EKF2
  * @unit m
@@ -993,7 +1021,7 @@ PARAM_DEFINE_FLOAT(EKF2_TAU_POS, 0.25f);
  * @group EKF2
  * @min 0.0
  * @max 0.2
- * @unit rad/sec
+ * @unit rad/s
  * @reboot_required true
  * @decimal 2
  */
@@ -1005,7 +1033,7 @@ PARAM_DEFINE_FLOAT(EKF2_GBIAS_INIT, 0.1f);
  * @group EKF2
  * @min 0.0
  * @max 0.5
- * @unit m/s/s
+ * @unit m/s^2
  * @reboot_required true
  * @decimal 2
  */
@@ -1044,7 +1072,7 @@ PARAM_DEFINE_FLOAT(EKF2_RNG_PITCH, 0.0f);
  * @reboot_required true
  * @volatile
  * @category system
- * @unit mGauss
+ * @unit mgauss
  * @decimal 3
  */
 PARAM_DEFINE_FLOAT(EKF2_MAGBIAS_X, 0.0f);
@@ -1059,7 +1087,7 @@ PARAM_DEFINE_FLOAT(EKF2_MAGBIAS_X, 0.0f);
  * @reboot_required true
  * @volatile
  * @category system
- * @unit mGauss
+ * @unit mgauss
  * @decimal 3
  */
 PARAM_DEFINE_FLOAT(EKF2_MAGBIAS_Y, 0.0f);
@@ -1074,7 +1102,7 @@ PARAM_DEFINE_FLOAT(EKF2_MAGBIAS_Y, 0.0f);
  * @reboot_required true
  * @volatile
  * @category system
- * @unit mGauss
+ * @unit mgauss
  * @decimal 3
  */
 PARAM_DEFINE_FLOAT(EKF2_MAGBIAS_Z, 0.0f);
@@ -1094,7 +1122,7 @@ PARAM_DEFINE_INT32(EKF2_MAGBIAS_ID, 0);
  *
  * @group EKF2
  * @reboot_required true
- * @unit mGauss**2
+ * @unit mgauss^2
  * @decimal 8
  */
 PARAM_DEFINE_FLOAT(EKF2_MAGB_VREF, 2.5E-7f);
@@ -1198,7 +1226,7 @@ PARAM_DEFINE_FLOAT(EKF2_EVP_GATE, 5.0f);
  * @group EKF2
  * @min 0.5
  * @max 10.0
- * @unit (m/sec**2)**2
+ * @unit (m/s^2)^2
  * @decimal 2
  */
 PARAM_DEFINE_FLOAT(EKF2_DRAG_NOISE, 2.5f);
@@ -1210,7 +1238,7 @@ PARAM_DEFINE_FLOAT(EKF2_DRAG_NOISE, 2.5f);
  * @group EKF2
  * @min 1.0
  * @max 100.0
- * @unit kg/m**2
+ * @unit kg/m^2
  * @decimal 1
  */
 PARAM_DEFINE_FLOAT(EKF2_BCOEF_X, 25.0f);
@@ -1222,7 +1250,7 @@ PARAM_DEFINE_FLOAT(EKF2_BCOEF_X, 25.0f);
  * @group EKF2
  * @min 1.0
  * @max 100.0
- * @unit kg/m**2
+ * @unit kg/m^2
  * @decimal 1
  */
 PARAM_DEFINE_FLOAT(EKF2_BCOEF_Y, 25.0f);
@@ -1303,7 +1331,7 @@ PARAM_DEFINE_FLOAT(EKF2_PCOEF_Z, 0.0f);
  * @group EKF2
  * @min 0.0
  * @max 0.8
- * @unit m/s/s
+ * @unit m/s^2
  * @decimal 2
  */
 PARAM_DEFINE_FLOAT(EKF2_ABL_LIM, 0.4f);
@@ -1316,7 +1344,7 @@ PARAM_DEFINE_FLOAT(EKF2_ABL_LIM, 0.4f);
  * @group EKF2
  * @min 20.0
  * @max 200.0
- * @unit m/s/s
+ * @unit m/s^2
  * @decimal 1
  */
 PARAM_DEFINE_FLOAT(EKF2_ABL_ACCLIM, 25.0f);
@@ -1417,3 +1445,15 @@ PARAM_DEFINE_FLOAT(EKF2_REQ_GPS_H, 10.0f);
  * @boolean
  */
 PARAM_DEFINE_INT32(EKF2_MAG_CHECK, 0);
+
+/**
+ * Default value of true airspeed used in EKF-GSF AHRS calculation.
+ * If no airspeed measurements are avalable, the EKF-GSF AHRS calculation will assume this value of true airspeed when compensating for centripetal acceleration during turns. Set to zero to disable centripetal acceleration compensation during fixed wing flight modes.
+ *
+ * @group EKF2
+ * @min 0.0
+ * @unit m/s
+ * @max 100.0
+ * @decimal 1
+ */
+PARAM_DEFINE_FLOAT(EKF2_GSF_TAS, 15.0f);

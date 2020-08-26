@@ -8,15 +8,16 @@ uorb start
 param load
 
 param set BAT_N_CELLS 3
+param set CBRK_SUPPLY_CHK 894281
 param set MAV_TYPE 22
 param set VT_TYPE 2
 param set SYS_RESTART_TYPE 0
 
 dataman start
 
+battery_simulator start
 simulator start
 tone_alarm start
-gpssim start
 pwm_out_sim start
 
 rc_update start
@@ -26,6 +27,7 @@ land_detector start vtol
 navigator start
 ekf2 start
 vtol_att_control start
+mc_hover_thrust_estimator start
 mc_pos_control start vtol
 mc_att_control start vtol
 mc_rate_control start vtol
@@ -41,7 +43,7 @@ logger start -e -t
 
 mavlink boot_complete
 
-sleep 2
+sleep 1
 
 echo "Boot complete"
 
@@ -80,11 +82,8 @@ ekf2 stop
 airspeed_selector stop
 sensors stop
 
-sleep 2
-
 simulator stop
 tone_alarm stop
-gpssim stop
 
 dataman stop
 #uorb stop

@@ -41,19 +41,30 @@
 
 using namespace matrix;
 
-bool FlightTaskAutoLineSmoothVel::activate(vehicle_local_position_setpoint_s last_setpoint)
+bool FlightTaskAutoLineSmoothVel::activate(const vehicle_local_position_setpoint_s &last_setpoint)
 {
 	bool ret = FlightTaskAutoMapper::activate(last_setpoint);
 
-	checkSetpoints(last_setpoint);
-	const Vector3f vel_prev(last_setpoint.vx, last_setpoint.vy, last_setpoint.vz);
-	const Vector3f pos_prev(last_setpoint.x, last_setpoint.y, last_setpoint.z);
+	Vector3f vel_prev{last_setpoint.vx, last_setpoint.vy, last_setpoint.vz};
+	Vector3f pos_prev{last_setpoint.x, last_setpoint.y, last_setpoint.z};
+	Vector3f accel_prev{last_setpoint.acceleration};
 
-	for (int i = 0; i < 3; ++i) {
-		_trajectory[i].reset(last_setpoint.acceleration[i], vel_prev(i), pos_prev(i));
+	for (int i = 0; i < 3; i++) {
+		// If the position setpoint is unknown, set to the current postion
+		if (!PX4_ISFINITE(pos_prev(i))) { pos_prev(i) = _position(i); }
+
+		// If the velocity setpoint is unknown, set to the current velocity
+		if (!PX4_ISFINITE(vel_prev(i))) { vel_prev(i) = _velocity(i); }
+
+		// No acceleration estimate available, set to zero if the setpoint is NAN
+		if (!PX4_ISFINITE(accel_prev(i))) { accel_prev(i) = 0.f; }
 	}
 
-	_yaw_sp_prev = last_setpoint.yaw;
+	for (int i = 0; i < 3; ++i) {
+		_trajectory[i].reset(accel_prev(i), vel_prev(i), pos_prev(i));
+	}
+
+	_yaw_sp_prev = PX4_ISFINITE(last_setpoint.yaw) ? last_setpoint.yaw : _yaw;
 	_updateTrajConstraints();
 
 	return ret;
@@ -67,30 +78,6 @@ void FlightTaskAutoLineSmoothVel::reActivate()
 	}
 
 	_trajectory[2].reset(0.f, 0.7f, _position(2));
-}
-
-void FlightTaskAutoLineSmoothVel::checkSetpoints(vehicle_local_position_setpoint_s &setpoints)
-{
-	// If the position setpoint is unknown, set to the current postion
-	if (!PX4_ISFINITE(setpoints.x)) { setpoints.x = _position(0); }
-
-	if (!PX4_ISFINITE(setpoints.y)) { setpoints.y = _position(1); }
-
-	if (!PX4_ISFINITE(setpoints.z)) { setpoints.z = _position(2); }
-
-	// If the velocity setpoint is unknown, set to the current velocity
-	if (!PX4_ISFINITE(setpoints.vx)) { setpoints.vx = _velocity(0); }
-
-	if (!PX4_ISFINITE(setpoints.vy)) { setpoints.vy = _velocity(1); }
-
-	if (!PX4_ISFINITE(setpoints.vz)) { setpoints.vz = _velocity(2); }
-
-	// No acceleration estimate available, set to zero if the setpoint is NAN
-	for (int i = 0; i < 3; i++) {
-		if (!PX4_ISFINITE(setpoints.acceleration[i])) { setpoints.acceleration[i] = 0.f; }
-	}
-
-	if (!PX4_ISFINITE(setpoints.yaw)) { setpoints.yaw = _yaw; }
 }
 
 /**
@@ -175,7 +162,7 @@ float FlightTaskAutoLineSmoothVel::_constrainOneSide(float val, float constraint
 
 float FlightTaskAutoLineSmoothVel::_constrainAbs(float val, float max)
 {
-	return math::sign(val) * math::min(fabsf(val), fabsf(max));
+	return sign(val) * math::min(fabsf(val), fabsf(max));
 }
 
 float FlightTaskAutoLineSmoothVel::_getMaxXYSpeed() const
@@ -237,8 +224,9 @@ float FlightTaskAutoLineSmoothVel::_getMaxZSpeed() const
 
 void FlightTaskAutoLineSmoothVel::_prepareSetpoints()
 {
-	// Interface: A valid position setpoint generates a velocity target using a P controller. If a velocity is specified
-	// that one is used as a velocity limit.
+	// Interface: A valid position setpoint generates a velocity target using conservative motion constraints.
+	// If a velocity is specified, that is used as a feedforward to track the position setpoint
+	// (ie. it assumes the position setpoint is moving at the specified velocity)
 	// If the position setpoints are set to NAN, the values in the velocity setpoints are used as velocity targets: nothing to do here.
 
 	_want_takeoff = false;
@@ -262,13 +250,13 @@ void FlightTaskAutoLineSmoothVel::_prepareSetpoints()
 			const float z_speed = _getMaxZSpeed();
 
 			Vector3f vel_sp_constrained = u_pos_traj_to_dest * sqrtf(xy_speed * xy_speed + z_speed * z_speed);
-			math::trajectory::clampToXYNorm(vel_sp_constrained, xy_speed);
-			math::trajectory::clampToZNorm(vel_sp_constrained, z_speed);
+			math::trajectory::clampToXYNorm(vel_sp_constrained, xy_speed, 0.5f);
+			math::trajectory::clampToZNorm(vel_sp_constrained, z_speed, 0.5f);
 
 			for (int i = 0; i < 3; i++) {
-				// If available, constrain the velocity using _velocity_setpoint(.)
+				// If available, use the existing velocity as a feedforward, otherwise replace it
 				if (PX4_ISFINITE(_velocity_setpoint(i))) {
-					_velocity_setpoint(i) = _constrainOneSide(vel_sp_constrained(i), _velocity_setpoint(i));
+					_velocity_setpoint(i) += vel_sp_constrained(i);
 
 				} else {
 					_velocity_setpoint(i) = vel_sp_constrained(i);
@@ -287,9 +275,9 @@ void FlightTaskAutoLineSmoothVel::_prepareSetpoints()
 			Vector2f vel_sp_constrained_xy = u_pos_traj_to_dest_xy * _getMaxXYSpeed();
 
 			for (int i = 0; i < 2; i++) {
-				// If available, constrain the velocity using _velocity_setpoint(.)
+				// If available, use the existing velocity as a feedforward, otherwise replace it
 				if (PX4_ISFINITE(_velocity_setpoint(i))) {
-					_velocity_setpoint(i) = _constrainOneSide(vel_sp_constrained_xy(i), _velocity_setpoint(i));
+					_velocity_setpoint(i) += vel_sp_constrained_xy(i);
 
 				} else {
 					_velocity_setpoint(i) = vel_sp_constrained_xy(i);
@@ -300,12 +288,12 @@ void FlightTaskAutoLineSmoothVel::_prepareSetpoints()
 		else if (z_pos_setpoint_valid) {
 			// Use Z position setpoint to generate a Z velocity setpoint
 
-			const float z_dir = math::sign(_position_setpoint(2) - _trajectory[2].getCurrentPosition());
+			const float z_dir = sign(_position_setpoint(2) - _trajectory[2].getCurrentPosition());
 			const float vel_sp_z = z_dir * _getMaxZSpeed();
 
-			// If available, constrain the velocity using _velocity_setpoint(.)
+			// If available, use the existing velocity as a feedforward, otherwise replace it
 			if (PX4_ISFINITE(_velocity_setpoint(2))) {
-				_velocity_setpoint(2) = _constrainOneSide(vel_sp_z, _velocity_setpoint(2));
+				_velocity_setpoint(2) += vel_sp_z;
 
 			} else {
 				_velocity_setpoint(2) = vel_sp_z;
@@ -328,8 +316,25 @@ void FlightTaskAutoLineSmoothVel::_updateTrajConstraints()
 	_trajectory[2].setMaxJerk(_param_mpc_jerk_auto.get());
 
 	if (_velocity_setpoint(2) < 0.f) { // up
-		_trajectory[2].setMaxAccel(_param_mpc_acc_up_max.get());
-		_trajectory[2].setMaxVel(_param_mpc_z_vel_max_up.get());
+		float z_accel_constraint = _param_mpc_acc_up_max.get();
+		float z_vel_constraint = _param_mpc_z_vel_max_up.get();
+
+		// The constraints are broken because they are used as hard limits by the position controller, so put this here
+		// until the constraints don't do things like cause controller integrators to saturate. Once the controller
+		// doesn't use z speed constraints, this can go in AutoMapper::_prepareTakeoffSetpoints(). Accel limit is to
+		// emulate the motor ramp (also done in the controller) so that the controller can actually track the setpoint.
+		if (_type == WaypointType::takeoff &&  _dist_to_ground < _param_mpc_land_alt1.get()) {
+			z_vel_constraint = _param_mpc_tko_speed.get();
+			z_accel_constraint = math::min(z_accel_constraint, _param_mpc_tko_speed.get() / _param_mpc_tko_ramp_t.get());
+
+			// Keep the altitude setpoint at the current altitude
+			// to avoid having it going down into the ground during
+			// the initial ramp as the velocity does not start at 0
+			_trajectory[2].setCurrentPosition(_position(2));
+		}
+
+		_trajectory[2].setMaxVel(z_vel_constraint);
+		_trajectory[2].setMaxAccel(z_accel_constraint);
 
 	} else { // down
 		_trajectory[2].setMaxAccel(_param_mpc_acc_down_max.get());

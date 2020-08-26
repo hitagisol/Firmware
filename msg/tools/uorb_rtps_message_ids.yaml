@@ -147,7 +147,7 @@ rtps:
   - msg: sensor_baro
     id: 63
     send: true
-  - msg: sensor_bias
+  - msg: estimator_sensor_bias
     id: 64
   - msg: sensor_combined
     id: 65
@@ -158,12 +158,12 @@ rtps:
     id: 67
   - msg: sensor_mag
     id: 68
-  - msg: sensor_preflight
+  - msg: sensor_preflight_imu
     id: 69
   - msg: sensor_selection
     id: 70
     send: true
-  - msg: servorail_status
+  - msg: px4io_status
     id: 71
   - msg: subsystem_info
     id: 72
@@ -177,8 +177,10 @@ rtps:
     id: 76
   - msg: test_motor
     id: 77
-  - msg: timesync_status
+  - msg: timesync
     id: 78
+    receive: true
+    send: true
   - msg: trajectory_waypoint
     id: 79
     receive: true
@@ -256,22 +258,47 @@ rtps:
     id: 112
   - msg: vehicle_acceleration
     id: 113
-  - msg: sensor_gyro_control
-    id: 114
   - msg: airspeed_validated
     id: 115
   - msg: onboard_computer_status
     id: 116
+    receive: true
   - msg: cellular_status
     id: 117
   - msg: sensor_accel_fifo
     id: 118
-  - msg: sensor_accel_status
-    id: 119
   - msg: sensor_gyro_fifo
+    id: 119
+  - msg: vehicle_imu
     id: 120
-  - msg: sensor_gyro_status
+  - msg: vehicle_imu_status
     id: 121
+  - msg: vehicle_angular_acceleration
+    id: 122
+  - msg: logger_status
+    id: 123
+  - msg: rpm
+    id: 124
+  - msg: hover_thrust_estimate
+    id: 125
+  - msg: trajectory_bezier
+    id: 126
+  - msg: vehicle_trajectory_bezier
+    id: 127
+  - msg: timesync_status
+    id: 128
+  - msg: orb_test
+    id: 129
+  - msg: orb_test_medium
+    id: 130
+  - msg: orb_test_large
+    id: 131
+  - msg: yaw_estimator_status
+    id: 132
+  - msg: telemetry_heartbeat
+    id: 133
+  - msg: sensor_preflight_mag
+    id: 134
   ########## multi topics: begin ##########
   - msg: actuator_controls_0
     id: 150
@@ -341,4 +368,16 @@ rtps:
   - msg: estimator_innovation_test_ratios
     id: 171
     alias: estimator_innovations
+  - msg: orb_multitest
+    id: 172
+    alias: orb_test
+  - msg: orb_test_medium_multi
+    id: 173
+    alias: orb_test_medium
+  - msg: orb_test_medium_queue
+    id: 174
+    alias: orb_test_medium
+  - msg: orb_test_medium_queue_poll
+    id: 175
+    alias: orb_test_medium
   ########## multi topics: end ##########

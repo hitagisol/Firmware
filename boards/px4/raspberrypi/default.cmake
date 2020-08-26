@@ -1,3 +1,6 @@
+add_definitions(
+	-D__PX4_LINUX
+)
 
 px4_add_board(
 	VENDOR px4
@@ -17,18 +20,19 @@ px4_add_board(
 		distance_sensor # all available distance sensor drivers
 		gps
 		#imu # all available imu drivers
-		imu/mpu9250
+		imu/invensense/mpu9250
 		linux_pwm_out
-		linux_sbus
 		#magnetometer # all available magnetometer drivers
 		magnetometer/hmc5883
+		pca9685_pwm_out
 		pwm_out_sim
+		rc_input
 		rpi_rc_in
 		#telemetry # all available telemetry drivers
 	MODULES
 		airspeed_selector
 		attitude_estimator_q
-		#battery_status
+		battery_status
 		camera_feedback
 		commander
 		dataman
@@ -43,6 +47,7 @@ px4_add_board(
 		logger
 		mavlink
 		mc_att_control
+		mc_hover_thrust_estimator
 		mc_pos_control
 		mc_rate_control
 		#micrortps_bridge
@@ -50,6 +55,7 @@ px4_add_board(
 		rc_update
 		rover_pos_control
 		sensors
+		temperature_compensation
 		sih
 		#simulator
 		vmount
@@ -63,17 +69,15 @@ px4_add_board(
 		param
 		perf
 		pwm
-		reboot
 		sd_bench
 		shutdown
 		tests # tests and test runner
-		top
+		#top
 		topic_listener
 		tune_control
 		ver
 		work_queue
 	EXAMPLES
-		bottle_drop # OBC challenge
 		dyn_hello # dynamically loading modules example
 		fixedwing_control # Tutorial code from https://px4.io/dev/example_fixedwing_control
 		hello
@@ -83,4 +87,5 @@ px4_add_board(
 		px4_simple_app # Tutorial code from http://dev.px4.io/en/apps/hello_sky.html
 		rover_steering_control # Rover example app
 		uuv_example_app
+		work_item
 	)

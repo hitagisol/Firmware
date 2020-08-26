@@ -196,9 +196,9 @@ serial_port_to_wq(const char *serial)
 		return wq_configurations::UART8;
 	}
 
-	PX4_ERR("unknown serial port: %s", serial);
+	PX4_DEBUG("unknown serial port: %s", serial);
 
-	return wq_configurations::hp_default;
+	return wq_configurations::UART_UNKNOWN;
 }
 
 static void *
@@ -264,13 +264,9 @@ WorkQueueManagerRun(int, char **)
 			}
 
 #ifndef __PX4_QURT
-			// schedule policy FIFO
 
-#if defined(ENABLE_LOCKSTEP_SCHEDULER)
-			int ret_setschedpolicy = pthread_attr_setschedpolicy(&attr, SCHED_RR);
-#else
+			// schedule policy FIFO
 			int ret_setschedpolicy = pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
-#endif
 
 			if (ret_setschedpolicy != 0) {
 				PX4_ERR("failed to set sched policy SCHED_FIFO (%i)", ret_setschedpolicy);
@@ -318,7 +314,7 @@ WorkQueueManagerStart()
 
 		int task_id = px4_task_spawn_cmd("wq:manager",
 						 SCHED_DEFAULT,
-						 PX4_WQ_HP_BASE,
+						 SCHED_PRIORITY_MAX,
 						 1280,
 						 (px4_main_t)&WorkQueueManagerRun,
 						 nullptr);
@@ -394,7 +390,7 @@ WorkQueueManagerStatus()
 	if (!_wq_manager_should_exit.load() && (_wq_manager_wqs_list != nullptr)) {
 
 		const size_t num_wqs = _wq_manager_wqs_list->size();
-		PX4_INFO_RAW("\nWork Queue: %-1zu threads                      RATE        INTERVAL\n", num_wqs);
+		PX4_INFO_RAW("\nWork Queue: %-1zu threads                        RATE        INTERVAL\n", num_wqs);
 
 		LockGuard lg{_wq_manager_wqs_list->mutex()};
 		size_t i = 0;
@@ -402,7 +398,7 @@ WorkQueueManagerStatus()
 		for (WorkQueue *wq : *_wq_manager_wqs_list) {
 			i++;
 
-			const bool last_wq = !(i < num_wqs);
+			const bool last_wq = (i >= num_wqs);
 
 			if (!last_wq) {
 				PX4_INFO_RAW("|__ %zu) ", i);

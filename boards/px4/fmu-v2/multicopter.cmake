@@ -26,12 +26,12 @@ px4_add_board(
 		imu/l3gd20
 		imu/lsm303d
 		imu/mpu6000
-		#imu/mpu9250
+		#imu/invensense/mpu9250
 		irlock
 		lights/rgbled
 		magnetometer/hmc5883
 		#optical_flow/px4flow
-		px4fmu
+		pwm_out
 		px4io
 		tone_alarm
 	MODULES
@@ -49,15 +49,17 @@ px4_add_board(
 		logger
 		mavlink
 		mc_att_control
+		mc_hover_thrust_estimator
 		mc_pos_control
 		mc_rate_control
 		navigator
 		rc_update
 		sensors
+		#sih
+		#temperature_compensation
 		vmount
 	SYSTEMCMDS
 		#bl_update
-		#config
 		#dumpfile
 		#esc_calib
 		hardfault_log

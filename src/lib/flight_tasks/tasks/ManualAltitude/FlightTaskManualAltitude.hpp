@@ -39,14 +39,16 @@
 
 #pragma once
 
-#include "FlightTaskManual.hpp"
+#include "FlightTask.hpp"
+#include "Sticks.hpp"
+#include <lib/ecl/AlphaFilter/AlphaFilter.hpp>
 
-class FlightTaskManualAltitude : public FlightTaskManual
+class FlightTaskManualAltitude : public FlightTask
 {
 public:
-	FlightTaskManualAltitude() = default;
+	FlightTaskManualAltitude();
 	virtual ~FlightTaskManualAltitude() = default;
-	bool activate(vehicle_local_position_setpoint_s last_setpoint) override;
+	bool activate(const vehicle_local_position_setpoint_s &last_setpoint) override;
 	bool updateInitialize() override;
 	bool update() override;
 
@@ -56,6 +58,7 @@ protected:
 	virtual void _updateSetpoints(); /**< updates all setpoints */
 	virtual void _scaleSticks(); /**< scales sticks to velocity in z */
 	bool _checkTakeoff() override;
+	void _updateConstraintsFromEstimator();
 
 	/**
 	 * rotates vector into local frame
@@ -69,7 +72,10 @@ protected:
 	 */
 	void _updateAltitudeLock();
 
-	DEFINE_PARAMETERS_CUSTOM_PARENT(FlightTaskManual,
+	Sticks _sticks;
+	bool _sticks_data_required = true; ///< let inherited task-class define if it depends on stick data
+
+	DEFINE_PARAMETERS_CUSTOM_PARENT(FlightTask,
 					(ParamFloat<px4::params::MPC_HOLD_MAX_Z>) _param_mpc_hold_max_z,
 					(ParamInt<px4::params::MPC_ALT_MODE>) _param_mpc_alt_mode,
 					(ParamFloat<px4::params::MPC_HOLD_MAX_XY>) _param_mpc_hold_max_xy,
@@ -82,7 +88,8 @@ protected:
 					(ParamFloat<px4::params::MPC_LAND_SPEED>)
 					_param_mpc_land_speed, /**< desired downwards speed when approaching the ground */
 					(ParamFloat<px4::params::MPC_TKO_SPEED>)
-					_param_mpc_tko_speed /**< desired upwards speed when still close to the ground */
+					_param_mpc_tko_speed, /**< desired upwards speed when still close to the ground */
+					(ParamFloat<px4::params::MC_MAN_TILT_TAU>) _param_mc_man_tilt_tau
 				       )
 private:
 	bool _isYawInput();
@@ -125,7 +132,7 @@ private:
 	float _yawspeed_filter_state{}; /**< state of low-pass filter in rad/s */
 	uint8_t _reset_counter = 0; /**< counter for estimator resets in z-direction */
 	float _max_speed_up = 10.0f;
-	float _min_speed_down = 1.0f;
+	float _max_speed_down = 1.0f;
 	bool _terrain_follow{false}; /**< true when the vehicle is following the terrain height */
 	bool _terrain_hold{false}; /**< true when vehicle is controlling height above a static ground position */
 
@@ -136,4 +143,6 @@ private:
 	 * _dist_to_ground_lock.
 	 */
 	float _dist_to_ground_lock = NAN;
+
+	AlphaFilter<matrix::Vector2f> _man_input_filter;
 };

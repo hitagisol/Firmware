@@ -57,7 +57,6 @@ px4_add_romfs_files(
 	IO_pass.main.mix
 	mount.aux.mix
 	mount_legs.aux.mix
-	ocpoc_quad_x.main.mix
 	octo_cox.main.mix
 	octo_cox_w.main.mix
 	octo_+.main.mix
@@ -70,18 +69,20 @@ px4_add_romfs_files(
 	quad_s250aq.main.mix
 	quad_+_vtol.main.mix
 	quad_w.main.mix
-	quad_x_can.main.mix
 	quad_x.main.mix
+	quad_x_cw.main.mix
 	quad_x_vtol.main.mix
 	stampede.main.mix
 	tri_y_yaw-.main.mix
 	tri_y_yaw+.main.mix
 	rover_generic.main.mix
+	rover_diff_and_servo.main.mix
 	Viper.main.mix
 	vtol_AAERT.aux.mix
 	vtol_AAVVT.aux.mix
 	vtol_convergence.main.mix
 	vtol_delta.aux.mix
 	wingwing.main.mix
-	zmr250.main.mix
+	TF-AutoG2.main.mix
+	uuv_x.main.mix
 )

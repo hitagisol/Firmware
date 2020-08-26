@@ -47,26 +47,9 @@
 
 #include "simulator.h"
 
-using namespace simulator;
-
 static px4_task_t g_sim_task = -1;
 
 Simulator *Simulator::_instance = nullptr;
-
-Simulator *Simulator::getInstance()
-{
-	return _instance;
-}
-
-bool Simulator::getGPSSample(uint8_t *buf, int len)
-{
-	return _gps.copyData(buf, len);
-}
-
-void Simulator::write_gps_data(void *buf)
-{
-	_gps.writeData(buf);
-}
 
 void Simulator::parameters_update(bool force)
 {
@@ -96,9 +79,8 @@ int Simulator::start(int argc, char *argv[])
 			_instance->set_port(atoi(argv[3]));
 		}
 
-#ifndef __PX4_QURT
 		_instance->run();
-#endif
+
 		return 0;
 
 	} else {
@@ -107,19 +89,9 @@ int Simulator::start(int argc, char *argv[])
 	}
 }
 
-void Simulator::set_ip(InternetProtocol ip)
-{
-	_ip = ip;
-}
-
-void Simulator::set_port(unsigned port)
-{
-	_port = port;
-}
-
 static void usage()
 {
-	PX4_INFO("Usage: simulator {start -[spt] [-u udp_port / -c tcp_port] |stop}");
+	PX4_INFO("Usage: simulator {start -[spt] [-u udp_port / -c tcp_port] |stop|status}");
 	PX4_INFO("Start simulator:     simulator start");
 	PX4_INFO("Connect using UDP: simulator start -u udp_port");
 	PX4_INFO("Connect using TCP: simulator start -c tcp_port");
@@ -141,12 +113,12 @@ int simulator_main(int argc, char *argv[])
 
 		g_sim_task = px4_task_spawn_cmd("simulator",
 						SCHED_DEFAULT,
-						SCHED_PRIORITY_DEFAULT,
+						SCHED_PRIORITY_MAX,
 						1500,
 						Simulator::start,
 						argv);
 
-#if !defined(__PX4_QURT) && defined(ENABLE_LOCKSTEP_SCHEDULER)
+#if defined(ENABLE_LOCKSTEP_SCHEDULER)
 
 		// We want to prevent the rest of the startup script from running until time
 		// is initialized by the HIL_SENSOR messages from the simulator.
@@ -168,6 +140,15 @@ int simulator_main(int argc, char *argv[])
 		} else {
 			px4_task_delete(g_sim_task);
 			g_sim_task = -1;
+		}
+
+	} else if (argc == 2 && strcmp(argv[1], "status") == 0) {
+		if (g_sim_task < 0) {
+			PX4_WARN("Simulator not running");
+			return 1;
+
+		} else {
+			PX4_INFO("running");
 		}
 
 	} else {

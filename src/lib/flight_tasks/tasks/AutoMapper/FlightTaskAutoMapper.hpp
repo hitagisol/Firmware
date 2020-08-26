@@ -41,13 +41,14 @@
 #pragma once
 
 #include "FlightTaskAuto.hpp"
+#include "Sticks.hpp"
 
 class FlightTaskAutoMapper : public FlightTaskAuto
 {
 public:
-	FlightTaskAutoMapper() = default;
+	FlightTaskAutoMapper();
 	virtual ~FlightTaskAutoMapper() = default;
-	bool activate(vehicle_local_position_setpoint_s last_setpoint) override;
+	bool activate(const vehicle_local_position_setpoint_s &last_setpoint) override;
 	bool update() override;
 
 protected:
@@ -70,11 +71,13 @@ protected:
 					_param_mpc_land_alt1, // altitude at which speed limit downwards reaches maximum speed
 					(ParamFloat<px4::params::MPC_LAND_ALT2>)
 					_param_mpc_land_alt2, // altitude at which speed limit downwards reached minimum speed
-					(ParamFloat<px4::params::MPC_TKO_SPEED>) _param_mpc_tko_speed
+					(ParamFloat<px4::params::MPC_TKO_SPEED>) _param_mpc_tko_speed,
+					(ParamFloat<px4::params::MPC_TKO_RAMP_T>)
+					_param_mpc_tko_ramp_t // time constant for smooth takeoff ramp
 				       );
 
 private:
-
+	Sticks _sticks;
 	void _reset(); /**< Resets member variables to current vehicle state */
 	WaypointType _type_previous{WaypointType::idle}; /**< Previous type of current target triplet. */
 	bool _highEnoughForLandingGear(); /**< Checks if gears can be lowered. */
